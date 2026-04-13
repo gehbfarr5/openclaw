@@ -499,6 +499,9 @@ export async function runSetupWizard(
       workspaceDir,
     });
   }
+  if (authChoice === undefined) {
+    throw new Error("Auth choice is required.");
+  }
 
   if (authChoice === "custom-api-key") {
     const { promptCustomApiConfig } = await import("../commands/onboard-custom.js");

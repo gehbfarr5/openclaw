@@ -113,7 +113,7 @@ importers:
         specifier: ^7.15.0
         version: 7.15.0
       '@vincentkoc/qrcode-tui':
-        specifier: ^0.2.1
+        specifier: 0.2.1
         version: 0.2.1
       ajv:
         specifier: ^8.18.0
