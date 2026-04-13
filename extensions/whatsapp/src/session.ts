@@ -37,8 +37,7 @@ export {
 const LOGGED_OUT_STATUS = DisconnectReason?.loggedOut ?? 401;
 
 async function loadQrTerminal() {
-  const mod = await import("qrcode-terminal");
-  return mod.default ?? mod;
+  return await import("@vincentkoc/qrcode-tui");
 }
 
 // Per-authDir queues so multi-account creds saves don't block each other.
@@ -102,6 +101,12 @@ async function safeSaveCreds(
   }
 }
 
+async function printTerminalQr(qr: string): Promise<void> {
+  const { renderTerminal } = await loadQrTerminal();
+  const output = await renderTerminal(qr, { small: true });
+  process.stdout.write(output.endsWith("\n") ? output : `${output}\n`);
+}
+
 /**
  * Create a Baileys socket backed by the multi-file auth store we keep on disk.
  * Consumers can opt into QR printing for interactive login flows.
@@ -150,8 +155,9 @@ export async function createWaSocket(
           opts.onQr?.(qr);
           if (printQr) {
             console.log("Scan this QR in WhatsApp (Linked Devices):");
-            const qrcode = await loadQrTerminal();
-            qrcode.generate(qr, { small: true });
+            void printTerminalQr(qr).catch((err) => {
+              sessionLogger.warn({ error: String(err) }, "failed rendering WhatsApp QR");
+            });
           }
         }
         if (connection === "close") {
