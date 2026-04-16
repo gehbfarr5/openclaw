@@ -1,0 +1,54 @@
+name: Android Build
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'play'
+        type: choice
+        options:
+          - play
+          - third-party
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+          
+      - name: Grant execute permission
+        working-directory: apps/android
+        run: chmod +x gradlew
+        
+      - name: Build APK
+        working-directory: apps/android
+        run: |
+          if [ "${{ inputs.build_type }}" = "play" ]; then
+            ./gradlew :app:assemblePlayDebug
+          else
+            ./gradlew :app:assembleThirdPartyDebug
+          fi
+          
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openclaw-android-${{ inputs.build_type }}
+          path: apps/android/app/build/outputs/apk/**/*.apk
+          retention-days: 7
